@@ -1347,14 +1347,19 @@ function importPlan(file){
   fr.readAsText(file);
 }
 
-let jumpPending = true;
+let jumpPending = true, userScrolled = false;
 const todayStr = () => { const n = new Date(); return dateKey(n.getFullYear(), n.getMonth(), n.getDate()); };
-function jumpToToday(){
-  if(!jumpPending) return;
+function doJump(){
+  if(userScrolled) return;
   const row = document.querySelector('tr.today-row');
   if(!row) return;
-  jumpPending = false;
-  setTimeout(() => row.scrollIntoView({block:'start', behavior:'smooth'}), 150);
+  window.scrollTo({top: Math.max(0, row.getBoundingClientRect().top + window.scrollY - 90), behavior:'auto'});
+}
+function jumpToToday(){
+  if(!jumpPending || !document.querySelector('tr.today-row')) return;
+  jumpPending = false; userScrolled = false;
+  ['wheel','touchstart','keydown','mousedown'].forEach(ev => window.addEventListener(ev, () => { userScrolled = true; }, {passive:true, once:true}));
+  [60, 400, 1000, 2200].forEach(t => setTimeout(doJump, t));
 }
 
 (function init(){
